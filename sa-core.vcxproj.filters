@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="include\subhook\subhook.c">
+      <Filter>external\subhook</Filter>
+    </ClCompile>
+    <ClCompile Include="include\sampgdk\sampgdk.c">
+      <Filter>external</Filter>
+    </ClCompile>
+    <ClCompile Include="include\sampgdk\amxplugin.cpp">
+      <Filter>external</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gracmd.cpp">
+      <Filter>sa-core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\utils\memory.cpp">
+      <Filter>sa-core</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="sa-core">
+      <UniqueIdentifier>{55c6cfa1-8ee4-4de5-9a0e-a92b02820e86}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external">
+      <UniqueIdentifier>{d9cd9ae7-1776-4e6f-9608-5faa93eb1d00}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="external\subhook">
+      <UniqueIdentifier>{e058fa42-4e49-47b6-a152-438065af5d79}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\sampgdk\sampgdk.h">
+      <Filter>external</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gracmd.h">
+      <Filter>sa-core</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="sa-core.def">
+      <Filter>sa-core</Filter>
+    </None>
+  </ItemGroup>
+</Project>
