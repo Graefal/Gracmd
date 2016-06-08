@@ -40,19 +40,19 @@
 #include <subhook/subhook.h>
 #include <sampgdk/sampgdk.h>
 
-namespace Utils {
-	class Memory {
+struct s_Command
+{
+	int OnPlayerCommandReceived;
+	int OnPlayerCommandPerformed;
+	std::unordered_map<std::string, int> Command;
+};
+
+namespace Utils
+{
+	class Memory
+	{
 	public:
 		static DWORD FindPattern(char *pattern, char *mask);
 	};
 }
-
-struct s_Command
-{
-	int OnPlayerCommandReceived = 0;
-	int OnPlayerCommandPerformed = 0;
-	std::unordered_map<std::string, int> Command;
-};
-
 #endif // !_SACORE_SA_CORE_H_
-#pragma once

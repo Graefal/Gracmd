@@ -25,65 +25,62 @@ std::unordered_map<std::string, AMX*> Command_List;
 	DWORD Command_Addr = Utils::Memory::FindPattern("\x55\x89\xE5\x57\x56\x53\x83\xEC\x2C\x8B\x75\x08\xC7\x45\xE4\x00\x00\x00\x00\x8B\x7D\x10\x89\xF3\xEB\x14", "xxxxxxxxxxxxxxxxxxxxxxxxxx");
 #endif // _WIN32
 
-typedef int(fastcall* Command_t)(void *This, void *notUsed, cell playerid, const char *cmdtext);
-static int fastcall Command_0(void *This, void *notUsed, cell playerid, const char *cmdtext)
+typedef int(fastcall* Command_t)(void *This, void *notUsed, cell playerid, char *cmdtext);
+static int fastcall Command_0(void *This, void *notUsed, cell playerid, char *cmdtext)
 {
-	std::string temp0(cmdtext);
-	std::transform(temp0.begin(), temp0.end(), temp0.begin(), ::tolower);
+	int temp0 = 1;
+	char temp1[29];
 
-	std::size_t temp1 = temp0.find(' ');
-	if (temp1 == std::string::npos)
+	while (cmdtext[temp0] > ' ')
 	{
-		temp1 = temp0.length();
-	}
-	std::string temp2(temp0.substr(1, temp1 - 1));
-	std::unordered_map<std::string, AMX*>::iterator temp3 = Command_List.find(temp2);
-
-	if (temp3 != Command_List.end())
-	{
-		std::string temp04(temp0.substr(temp1, temp0.length() - temp1));
-		if (temp1 != temp0.length())
+		if (cmdtext[temp0] == '_')
 		{
-			temp1++;
-			for (char& i : temp04)
-			{
-				if (i != ' ')
-				{
-					break;
-				}
-				temp1++;
-			}
-			temp04.assign(temp0.substr(temp1, temp0.length() - temp1));
+			temp1[temp0 - 1] = '_';
 		}
-
-		auto temp00 = Data.find(temp3->second);
-		cell temp01;
-		cell temp02;
-
-		if (temp00->second->OnPlayerCommandReceived != -1)
+		else 
 		{
-			amx_PushString(temp3->second, &temp02, nullptr, temp0.c_str(), 0, 0);
-			amx_Push(temp3->second, playerid);
-			amx_Exec(temp3->second, &temp01, temp00->second->OnPlayerCommandReceived);
-			amx_Release(temp3->second, temp02);
+			temp1[temp0 - 1] = cmdtext[temp0] | 0x20;
+
+		}
+		temp0++;
+	}
+	
+	auto temp2 = Command_List.find(temp1);
+	if (temp2 != Command_List.end())
+	{
+		while (cmdtext[temp0] == ' ')
+		{
+			temp0++;
+		}
+		
+		cell temp00;
+		cell temp01;
+		auto temp02 = Data.find(temp2->second);
+
+		if (temp02->second->OnPlayerCommandReceived != -1)
+		{
+			amx_PushString(temp2->second, &temp00, nullptr, &cmdtext[1], 0, 0);
+			amx_Push(temp2->second, playerid);
+			amx_Exec(temp2->second, &temp01, temp02->second->OnPlayerCommandReceived);
+			amx_Release(temp2->second, temp00);
 			if (temp01 == 0)
 			{
 				return 1;
 			}
 		}
+		
+		amx_PushString(temp2->second, &temp00, nullptr, &cmdtext[temp0], 0, 0);
+		amx_Push(temp2->second, playerid);
+		amx_Exec(temp2->second, &temp01, temp02->second->Command.find(temp1)->second);
+		amx_Release(temp2->second, temp00);
 
-		amx_PushString(temp3->second, &temp02, nullptr, temp04.c_str(), 0, 0);
-		amx_Push(temp3->second, playerid);
-		amx_Exec(temp3->second, &temp01, temp00->second->Command.find(temp2)->second);
-		amx_Release(temp3->second, temp02);
-
-		if (temp00->second->OnPlayerCommandPerformed != -1)
+		if (temp02->second->OnPlayerCommandPerformed != -1)
 		{
-			amx_Push(temp3->second, temp01);
-			amx_PushString(temp3->second, &temp02, nullptr, temp0.c_str(), 0, 0);
-			amx_Push(temp3->second, playerid);
-			amx_Exec(temp3->second, &temp01, temp00->second->OnPlayerCommandPerformed);
-			amx_Release(temp3->second, temp02);
+			amx_Push(temp2->second, temp01);
+			amx_PushString(temp2->second, &temp00, nullptr, &cmdtext[1], 0, 0);
+			amx_Push(temp2->second, playerid);
+			amx_Exec(temp2->second, &temp01, temp02->second->OnPlayerCommandPerformed);
+			amx_Release(temp2->second, temp00);
 		}
 	}
 	return 1;

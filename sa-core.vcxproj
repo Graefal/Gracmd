@@ -11,13 +11,13 @@
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>sacore</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <ProjectName>Gracmd</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
-    <WholeProgramOptimization>false</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -37,13 +37,14 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;HAVE_INTTYPES_H;HAVE_MALLOC_H;HAVE_STDINT_H;SUBHOOK_IMPLEMENTATION;SAMPGDK_AMALGAMATION;SACORE_EXPORTS</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)include\;E:\Graefal\N-Gaming Network\vendor\Gracmd\src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)include\;$(SolutionDir)src\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>None</DebugInformationFormat>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <ExceptionHandling>Sync</ExceptionHandling>
-      <StringPooling>true</StringPooling>
-      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <CompileAs>CompileAsCpp</CompileAs>
+      <Optimization>Full</Optimization>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>No</GenerateDebugInformation>
@@ -72,6 +73,7 @@
     <ClInclude Include="src\gracmd.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="README.md" />
     <None Include="sa-core.def" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

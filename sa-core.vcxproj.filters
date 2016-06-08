@@ -40,5 +40,6 @@
     <None Include="sa-core.def">
       <Filter>sa-core</Filter>
     </None>
+    <None Include="README.md" />
   </ItemGroup>
 </Project>
