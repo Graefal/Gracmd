@@ -29,8 +29,11 @@
 #endif // _WIN32
 
 #include <algorithm>
+#include <array>
 #include <chrono>
+#include <deque>
 #include <iostream>
+#include <map>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -42,8 +45,8 @@
 
 struct s_Command
 {
-	int OnPlayerCommandReceived;
-	int OnPlayerCommandPerformed;
+	int OnPlayerCommandReceived = -1;
+	int OnPlayerCommandPerformed = -1;
 	std::unordered_map<std::string, int> Command;
 };
 
@@ -55,4 +58,5 @@ namespace Utils
 		static DWORD FindPattern(char *pattern, char *mask);
 	};
 }
+
 #endif // !_SACORE_SA_CORE_H_

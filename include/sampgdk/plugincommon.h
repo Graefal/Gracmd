@@ -56,7 +56,7 @@ enum PLUGIN_DATA_TYPE
 {
 	// For some debugging
 	PLUGIN_DATA_LOGPRINTF		= 0x00,	// void (*logprintf)(char* format, ...)
-
+	PLUGIN_DATA_NETGAME			= 0xE1, // s_NetGame* NetGame;
 	// AMX
 	PLUGIN_DATA_AMX_EXPORTS		= 0x10,	// void* AmxFunctionTable[]    (see PLUGIN_AMX_EXPORT)
 	PLUGIN_DATA_CALLPUBLIC_FS	= 0x11, // int (*AmxCallPublicFilterScript)(char *szFunctionName)
