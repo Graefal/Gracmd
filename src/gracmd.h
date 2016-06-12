@@ -29,16 +29,12 @@
 #endif // _WIN32
 
 #include <algorithm>
-#include <array>
-#include <chrono>
 #include <deque>
 #include <iostream>
-#include <map>
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <utility>
-#include <vector>
 
 #include <subhook/subhook.h>
 #include <sampgdk/sampgdk.h>

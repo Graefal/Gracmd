@@ -2,7 +2,7 @@
 	N-Gaming Network | Gracmd
 
 	  Path:
-		../sa-core.cpp
+		../gracmd.cpp
 	  Description:
 		N/A
 	  Licenses:
@@ -16,7 +16,8 @@ extern void *pAMXFunctions;
 
 SubHook Command_Hook;
 
-std::vector<std::map<AMX*, s_Command*>> amx_Data;
+std::deque<AMX*> amx_List;
+std::deque<s_Command*> command_List;
 
 #ifdef _WIN32
 	DWORD Command_Addr = Utils::Memory::FindPattern("\x83\xEC\x08\x53\x8B\x5C\x24\x14\x55\x8B\x6C\x24\x14\x56\x33\xF6\x57\x8B\xF9\x89\x74\x24\x10\x8B\x04\xB7\x85\xC0", "xxxxxxxxxxxxxxxxxxxxxxxxxxxx");
@@ -29,7 +30,6 @@ static int fastcall Command_0(DWORD *This, void *notUsed, cell playerid, const c
 {
 	int pos = 1;
 	char cmdname[29];
-	const char *cmdparam;
 
 	while (cmdtext[pos] > ' ')
 	{
@@ -39,51 +39,55 @@ static int fastcall Command_0(DWORD *This, void *notUsed, cell playerid, const c
 		cmdname[pos - 1] = tolower(cmdtext[pos]);
 		pos++;
 	}
+
+	AMX *amx;
+	cell amx_addr, retval, unused;
+	s_Command *command;
+	const char *cmdparam;
+
 	while (cmdtext[pos] == ' ')
 	{
 		pos++;
 	}
 	cmdparam = &cmdtext[pos];
 
-	cell amx_addr;
-	cell retval;
-
-	for (size_t i = 0, j = amx_Data.size(); i < j; i++)
+	for (size_t i = 0, j = amx_List.size(); i < j; i++)
 	{
-		for (auto &k : amx_Data[i]) 
+		amx = amx_List[i];
+		command = command_List[i];
+
+		if (command->OnPlayerCommandReceived != -1)
 		{
-			if (k.second->OnPlayerCommandReceived != -1)
+			amx_PushString(amx, &amx_addr, nullptr, cmdtext, 0, 0);
+			amx_Push(amx, playerid);
+			amx_Exec(amx, &retval, command->OnPlayerCommandReceived);
+			amx_Release(amx, amx_addr);
+		}
+
+		if (retval)
+		{
+			auto iter = command->Command.find(cmdname);
+			if (iter != command->Command.end())
 			{
-				amx_PushString(k.first, &amx_addr, nullptr, cmdtext, 0, 0);
-				amx_Push(k.first, playerid);
-				amx_Exec(k.first, &retval, k.second->OnPlayerCommandReceived);
-				amx_Release(k.first, amx_addr);
-				if (!retval)
-				{
-					break;
-				}
+				amx_PushString(amx, &amx_addr, nullptr, cmdparam, 0, 0);
+				amx_Push(amx, playerid);
+				amx_Exec(amx, &unused, iter->second);
+				amx_Release(amx, amx_addr);
 			}
-			auto iter = k.second->Command.find(cmdname);
-			if (iter != k.second->Command.end())
-			{
-				amx_PushString(k.first, &amx_addr, nullptr, cmdparam, 0, 0);
-				amx_Push(k.first, playerid);
-				amx_Exec(k.first, &retval, iter->second);
-				amx_Release(k.first, amx_addr);
-				retval = 1;
-			}
-			else
-			{
-				retval = 0;
-			}
-			if (k.second->OnPlayerCommandPerformed != -1)
-			{
-				amx_Push(k.first, retval);
-				amx_PushString(k.first, &amx_addr, nullptr, cmdtext, 0, 0);
-				amx_Push(k.first, playerid);
-				amx_Exec(k.first, &retval, k.second->OnPlayerCommandPerformed);
-				amx_Release(k.first, amx_addr);
-			}
+		}
+
+		if (command->OnPlayerCommandPerformed != -1)
+		{
+			amx_Push(amx, retval);
+			amx_PushString(amx, &amx_addr, nullptr, cmdtext, 0, 0);
+			amx_Push(amx, playerid);
+			amx_Exec(amx, &unused, command->OnPlayerCommandPerformed);
+			amx_Release(amx, amx_addr);
+		}
+
+		if (!retval)
+		{
+			break;
 		}
 	}
 	return 1;
@@ -91,26 +95,32 @@ static int fastcall Command_0(DWORD *This, void *notUsed, cell playerid, const c
 
 void amx_ScanCommand(AMX *amx, bool state)
 {
+	for (size_t i = 0, j = amx_List.size(); i < j; i++)
+	{
+		if (amx_List[i] == amx)
+		{
+			throw "Something went wrong";
+		}
+	}
+	
 	int number = 0;
 	amx_NumPublics(amx, &number);
 	if (number)
 	{
+		bool opcr = false, opcp = false;
 		s_Command *s_command = new s_Command();
-
-		std::map<AMX*, s_Command*> content;
-		content.insert(std::make_pair(amx, s_command));
-
-		if(!state)
+		
+		if(state)
 		{
-			amx_Data.insert(amx_Data.begin(), content);
+			amx_List.push_front(amx);
+			command_List.push_front(s_command);
 		}
 		else
 		{
-			amx_Data.push_back(content);
+			amx_List.push_back(amx);
+			command_List.push_back(s_command);
 		}
 
-		bool opcr = false, opcp = false;
-		
 		for (int i = 0; i < number; i++)
 		{
 			char funcname[32];
@@ -123,6 +133,7 @@ void amx_ScanCommand(AMX *amx, bool state)
 			{
 				opcr = true;
 				s_command->OnPlayerCommandReceived = i;
+
 				continue;
 			}
 		FIRST:
@@ -134,6 +145,7 @@ void amx_ScanCommand(AMX *amx, bool state)
 			{
 				opcp = true;
 				s_command->OnPlayerCommandPerformed = i;
+
 				continue;
 			}
 		SECOND:
@@ -151,15 +163,7 @@ cell AMX_NATIVE_CALL iCommand_push_back_n(AMX *amx, cell *params)
 {
 	try
 	{
-		for (size_t i = 0; i < amx_Data.size(); i++)
-		{
-			auto iter = amx_Data[i].find(amx);
-			if (iter != amx_Data[i].end())
-			{
-				throw "Something went wrong";
-			}
-		}
-		amx_ScanCommand(amx, true);
+		amx_ScanCommand(amx, false);
 	}
 	catch (const char* e)
 	{
@@ -172,15 +176,7 @@ cell AMX_NATIVE_CALL iCommand_push_front_n(AMX *amx, cell *params)
 {
 	try
 	{
-		for (size_t i = 0; i < amx_Data.size(); i++)
-		{
-			auto iter = amx_Data[i].find(amx);
-			if (iter != amx_Data[i].end())
-			{
-				throw "Something went wrong";
-			}	
-		}
-		amx_ScanCommand(amx, false);
+		amx_ScanCommand(amx, true);
 	}
 	catch (const char* e)
 	{
@@ -201,6 +197,7 @@ PLUGIN_EXPORT unsigned int PLUGIN_CALL Supports()
 	return sampgdk::Supports() | SUPPORTS_VERSION | SUPPORTS_AMX_NATIVES | SUPPORTS_PROCESS_TICK;
 }
 
+std::unordered_map<AMX*, std::string> test;
 PLUGIN_EXPORT int PLUGIN_CALL AmxLoad(AMX *amx)
 {
 	return amx_Register(amx, natives, -1);
@@ -208,17 +205,32 @@ PLUGIN_EXPORT int PLUGIN_CALL AmxLoad(AMX *amx)
 
 PLUGIN_EXPORT int PLUGIN_CALL AmxUnload(AMX *amx)
 {
-	for (auto i = amx_Data.begin(); i < amx_Data.end(); i++)
+	for (size_t i = 0, j = amx_List.size(); i < j; i++)
 	{
-		auto iter = i->find(amx);
-		if (iter != i->end())
+		if (amx_List[i] == amx)
 		{
-			delete iter->second;
-			i->erase(iter->first);
-			amx_Data.erase(i);
+			for (auto it = command_List.begin(); it != command_List.end(); ++it)
+			{
+				if (*it == command_List[i])
+				{
+					delete command_List[i];
+					command_List.erase(it);
+
+					break;
+				}
+			}
+			break;
 		}
 	}
+	for (auto it = amx_List.begin(); it != amx_List.end(); ++it)
+	{
+		if (*it == amx)
+		{
+			amx_List.erase(it);
 
+			break;
+		}
+	}
 	return AMX_ERR_NONE;
 }
 
@@ -230,7 +242,7 @@ PLUGIN_EXPORT bool PLUGIN_CALL Load(void **ppData)
 	{
 		if (!Command_Addr)
 		{
-			throw "Gracmd: SA-MP version unsuported.";
+			throw "Gracmd: Your SA-MP version is unsuported yet.";
 		}
 		Command_Hook.Install((void *)(Command_t)(Command_Addr), (void *)Command_0);
 	}
@@ -244,5 +256,12 @@ PLUGIN_EXPORT bool PLUGIN_CALL Load(void **ppData)
 
 PLUGIN_EXPORT void PLUGIN_CALL Unload()
 {
+	amx_List.clear();
+	for (auto it = command_List.begin(); it != command_List.end(); ++it)
+	{
+		delete *it;
+	}
+	command_List.clear();
+
 	sampgdk::Unload();
 }
